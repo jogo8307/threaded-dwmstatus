@@ -29,7 +29,7 @@ config.h:
 	@echo CC $<
 	@${CC} -c ${CFLAGS} $<
 
-${OBJ}: config.h config.mk ${COMOBJ}
+${OBJ}: config.mk ${COMOBJ}
 
 ${COMOBJ}: config.mk
 
