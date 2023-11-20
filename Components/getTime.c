@@ -8,20 +8,24 @@
 
 char * getTime(const char *fmt,const char *tzname)
 {
-	char buf[129];
-	time_t tim;
-	struct tm *timtm;
+  char buf[129];
+  time_t tim;
+  struct tm *timtm;
 
-	setenv("TZ", tzname, 1);
-	tim = time(NULL);
-	timtm = localtime(&tim);
-	if (timtm == NULL)
-		return smprintf("");
+  if ( tzname != NULL )
+  {
+    setenv("TZ", tzname, 1);
+  }
+  tim = time(NULL);
+  timtm = localtime(&tim);
+  if (timtm == NULL)
+    return smprintf("");
 
-	if (!strftime(buf, sizeof(buf)-1, fmt, timtm)) {
-		fprintf(stderr, "strftime == 0\n");
-		return smprintf("");
-	}
+  if ( (timtm == NULL) || (strftime(buf, sizeof(buf) - 1, fmt, timtm)) == 0) 
+  {
+    fprintf(stderr, "timtm == NULL || strftime == 0\n");
+    return smprintf("");
+  }
 
-	return smprintf("%s", buf);
+  return smprintf("%s", buf);
 }
