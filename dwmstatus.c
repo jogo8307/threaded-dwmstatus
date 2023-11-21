@@ -41,13 +41,12 @@ static void* update_1m(void* arg);
 static void* update_2s(void* arg);
 static void update_signal(int sig);
 static void init(void);
-
 int main(void)
 {
   if ( !(dpy = XOpenDisplay(NULL)) ) 
   {
     fprintf(stderr, "dwmstatus: cannot open display.\n");
-    return 1;
+    exit(1);
   }
 
   init();
@@ -142,7 +141,7 @@ void init(void)
                                //fprintf(stderr,"CPU_Temp_base: '%s'",co);
       int result = strcmp(co, TEMP_NAME);
       free(co);
-      //			fprintf(stderr,"Result: %d \n",result);
+      //fprintf(stderr,"Result: %d \n",result);
       if ( result == 0 )
       {
         baseTemp = smprintf(basecheck);
@@ -154,7 +153,7 @@ void init(void)
   }
 
   batteryFileNamePrefixNum = 0;
-  fprintf(stderr,"%lu battery prefixes given\n", NUMOFBATTERYPREFIXES );
+  //fprintf(stderr,"%lu battery prefixes given\n", NUMOFBATTERYPREFIXES );
   for ( i = 0;  i < NUMOFBATTERYPREFIXES; i++ )
   {
     strcpy(basecheck, batteryFileNamePrefix[i]);
