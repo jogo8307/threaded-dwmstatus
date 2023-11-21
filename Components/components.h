@@ -4,6 +4,6 @@ char* get_vol(void);
 
 char* gettemperature(const char *base, const char *sensor);
 
-char* getbattery(const char *base);
+char* getbattery(const char *base, const char *filenamePrefix);
 
 char * loadavg(void);

@@ -18,12 +18,19 @@
 #include "Components/components.h"
 #include "Components/util.h"
 
+#define NUMOFBATTERYPREFIXES (sizeof(batteryFileNamePrefix)/sizeof(batteryFileNamePrefix[0]))
+
 /* Local variables declaration */
+static const char *batteryFileNamePrefix[] = { "energy", "charge" };
+
 static char* currentTime;
 static char* masterVol;
 static char* tempCPU;
 static char* statBAT0;
 static char* baseTemp;
+
+static unsigned int batteryFileNamePrefixNum;
+
 
 static pthread_mutex_t  status_lock;
 
@@ -37,18 +44,22 @@ static void init(void);
 
 int main(void)
 {
-  if (!(dpy = XOpenDisplay(NULL))) {
+  if ( !(dpy = XOpenDisplay(NULL)) ) 
+  {
     fprintf(stderr, "dwmstatus: cannot open display.\n");
     return 1;
   }
+
   init();
+
   pthread_t cyclicthread1, cyclicthread2;
+
   /* Initialize mutex and condition variable objects */
   pthread_mutex_init(&status_lock, NULL);
-  pthread_create(&cyclicthread1,NULL,update_2s,NULL);
-  pthread_create(&cyclicthread2,NULL,update_1m,NULL);
-  pthread_join(cyclicthread1,NULL);
-  pthread_join(cyclicthread2,NULL);
+  pthread_create(&cyclicthread1, NULL, update_2s, NULL);
+  pthread_create(&cyclicthread2, NULL, update_1m, NULL);
+  pthread_join(cyclicthread1, NULL);
+  pthread_join(cyclicthread2, NULL);
   XCloseDisplay(dpy);
 
   free(statBAT0);
@@ -69,6 +80,7 @@ void setstatus(void){
 }
 
 void* update_2s(void* arg){
+  (void)arg;
   //int k = 0;
   while(1){
     pthread_mutex_lock(&status_lock);
@@ -91,8 +103,8 @@ void* update_1m(void* arg){
     free(statBAT0);
     //free(masterVol);
     //masterVol = get_vol();
-    statBAT0 = getbattery(BATTERY_BASE);
-    currentTime = getTime("%a %d %b %Y | %H:%M ", TIME_ZONE);
+    statBAT0 = getbattery(BATTERY_BASE, batteryFileNamePrefix[batteryFileNamePrefixNum]);
+    currentTime = getTime("%a %d %b %Y | %H:%M | %Z ", TIME_ZONE);
     setstatus();
     pthread_mutex_unlock(&status_lock);
     //k++;
@@ -114,7 +126,7 @@ void update_signal(int sig){
 void init(void)
 {
   char *co = NULL;
-  char basecheck[100];
+  char basecheck[128];
   char num[sizeof(unsigned int) + 1];
   unsigned int i;
   for(i = 0; i <= 10 ; i++)
@@ -137,13 +149,25 @@ void init(void)
         //fprintf(stderr,"CPU_Temp_base: '%s' \n",baseTemp);
         break;
       }
-
     }
     usleep(1000);
   }
 
+  batteryFileNamePrefixNum = 0;
+  fprintf(stderr,"%lu battery prefixes given\n", NUMOFBATTERYPREFIXES );
+  for ( i = 0;  i < NUMOFBATTERYPREFIXES; i++ )
+  {
+    strcpy(basecheck, batteryFileNamePrefix[i]);
+    strcat(basecheck, "_full_design");
+    co = readfile(BATTERY_BASE, basecheck);
+    if ( co != NULL )
+    {
+      batteryFileNamePrefixNum = i;
+    }
+  }
+
   signal(SIGUSR1, update_signal);
-  statBAT0 = getbattery(BATTERY_BASE);
+  statBAT0 = getbattery(BATTERY_BASE, batteryFileNamePrefix[batteryFileNamePrefixNum]);
   tempCPU = gettemperature(baseTemp, TEMP_FILE_NAME);
   masterVol = get_vol();
   currentTime = getTime(" %a %d %b %Y | %H:%M | %Z ", TIME_ZONE);
